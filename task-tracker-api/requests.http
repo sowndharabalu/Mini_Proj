@@ -1,0 +1,80 @@
+### Task Tracker REST API - HTTP Request Test Collection
+### Base URL: http://localhost:8081
+
+### 1. Get Tracking Statistics (Metrics Dashboard)
+GET http://localhost:8081/api/tasks/stats
+Accept: application/json
+
+### 2. Retrieve All Tasks
+GET http://localhost:8081/api/tasks
+Accept: application/json
+
+### 3. Filter Tasks by Status (PENDING, IN_PROGRESS, COMPLETED, CANCELLED)
+GET http://localhost:8081/api/tasks?status=IN_PROGRESS
+Accept: application/json
+
+### 4. Filter Tasks by Priority (LOW, MEDIUM, HIGH, URGENT)
+GET http://localhost:8081/api/tasks?priority=HIGH
+Accept: application/json
+
+### 5. Search Tasks by Keyword in Title or Description
+GET http://localhost:8081/api/tasks?search=MySQL
+Accept: application/json
+
+### 6. Retrieve Task by ID
+GET http://localhost:8081/api/tasks/1
+Accept: application/json
+
+### 7. Retrieve Task by Non-Existent ID (Tests 404 Not Found)
+GET http://localhost:8081/api/tasks/9999
+Accept: application/json
+
+### 8. Create a New Daily Task
+POST http://localhost:8081/api/tasks
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Build Frontend Reporting View",
+  "description": "Create charts for task distribution and completion velocities",
+  "priority": "HIGH",
+  "status": "PENDING",
+  "dueDate": "2026-10-05"
+}
+
+### 9. Create Task - Validation Failure (Tests 400 Bad Request)
+POST http://localhost:8081/api/tasks
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "",
+  "description": "Invalid task with blank title",
+  "priority": "MEDIUM"
+}
+
+### 10. Update Existing Task Completely
+PUT http://localhost:8081/api/tasks/1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Design REST API Architecture (Finalized)",
+  "description": "Controller-Service-Repository architecture with DTOs and global validation",
+  "status": "COMPLETED",
+  "priority": "HIGH",
+  "dueDate": "2026-09-28"
+}
+
+### 11. Quick Status Tracking Update (PATCH)
+PATCH http://localhost:8081/api/tasks/3/status
+Content-Type: application/json
+Accept: application/json
+
+{
+  "status": "COMPLETED"
+}
+
+### 12. Delete Task by ID
+DELETE http://localhost:8081/api/tasks/6
+Accept: application/json

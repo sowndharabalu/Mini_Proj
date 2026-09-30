@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Authentication API & Console</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="brand-title">User Authentication API</h1>
+                    <span class="brand-sub">Java • Spring Boot 3.4 • MySQL • Spring Security • JWT</span>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <span class="status-indicator online" id="apiStatus">Checking API...</span>
+                <button class="btn btn-secondary btn-sm" onclick="checkHealth()">Ping API</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Notification Banner -->
+        <div id="alertBanner" class="alert-banner hidden"></div>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs-nav">
+            <button class="tab-btn active" onclick="switchTab('registerTab')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                User Registration
+            </button>
+            <button class="tab-btn" onclick="switchTab('loginTab')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                User Login
+            </button>
+            <button class="tab-btn" onclick="switchTab('protectedTab')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                Protected Profile (/me)
+            </button>
+            <button class="tab-btn" onclick="switchTab('usersTab')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Users List (/api/users)
+            </button>
+            <button class="tab-btn" onclick="switchTab('docsTab')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                API Docs & Architecture
+            </button>
+        </div>
+
+        <div class="content-grid">
+            <!-- Left Column: Forms -->
+            <div class="card form-card">
+
+                <!-- TAB 1: REGISTRATION -->
+                <div id="registerTab" class="tab-content active">
+                    <div class="card-header">
+                        <h2>Register New Account</h2>
+                        <p class="card-desc">Tests <code>POST /api/auth/register</code> with Jakarta Bean Validation and duplicate checks.</p>
+                    </div>
+
+                    <form id="registerForm" onsubmit="handleRegister(event)" novalidate>
+                        <div class="form-group">
+                            <label for="regFullName">Full Name *</label>
+                            <input type="text" id="regFullName" placeholder="e.g. John Doe" required>
+                            <span class="field-error" id="err-fullName"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="regUsername">Username *</label>
+                            <input type="text" id="regUsername" placeholder="e.g. johndoe" required>
+                            <span class="field-hint">3-50 chars, alphanumeric, dots, underscores, hyphens</span>
+                            <span class="field-error" id="err-username"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="regEmail">Email Address *</label>
+                            <input type="email" id="regEmail" placeholder="e.g. john@example.com" required>
+                            <span class="field-error" id="err-email"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="regPassword">Password *</label>
+                            <input type="password" id="regPassword" placeholder="Minimum 6 characters" required>
+                            <span class="field-hint">Hashed with BCrypt (10 rounds) before MySQL storage</span>
+                            <span class="field-error" id="err-password"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="regRole">Role</label>
+                            <select id="regRole">
+                                <option value="ROLE_USER" selected>ROLE_USER (Standard User)</option>
+                                <option value="ROLE_ADMIN">ROLE_ADMIN (Administrator)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="btnRegister">
+                                Create Account
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="fillSampleUser()">
+                                Fill Sample Data
+                            </button>
+                            <button type="button" class="btn btn-outline" onclick="triggerValidationError()">
+                                Test Validation Error
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- TAB 2: LOGIN -->
+                <div id="loginTab" class="tab-content">
+                    <div class="card-header">
+                        <h2>User Login</h2>
+                        <p class="card-desc">Tests <code>POST /api/auth/login</code> with Spring Security authentication and JWT token issuance.</p>
+                    </div>
+
+                    <form id="loginForm" onsubmit="handleLogin(event)" novalidate>
+                        <div class="form-group">
+                            <label for="loginIdentifier">Username or Email *</label>
+                            <input type="text" id="loginIdentifier" placeholder="Enter username or registered email" required>
+                            <span class="field-error" id="err-usernameOrEmail"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="loginPassword">Password *</label>
+                            <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                            <span class="field-error" id="err-loginPassword"></span>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="btnLogin">
+                                Authenticate & Get JWT
+                            </button>
+                            <button type="button" class="btn btn-outline" onclick="triggerBadCredentials()">
+                                Test Bad Password (401)
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Active Session Box -->
+                    <div id="sessionBox" class="session-box hidden">
+                        <div class="session-header">
+                            <span class="session-badge active">Active Token Stored</span>
+                            <button class="btn-text" onclick="clearToken()">Logout / Clear Token</button>
+                        </div>
+                        <div class="session-details">
+                            <p><strong>Logged In As:</strong> <span id="sessionUsername">-</span></p>
+                            <p><strong>Role:</strong> <span id="sessionRole" class="badge-role">-</span></p>
+                            <p><strong>Token Expiration:</strong> <span id="sessionExpiry">-</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: PROTECTED PROFILE -->
+                <div id="protectedTab" class="tab-content">
+                    <div class="card-header">
+                        <h2>Protected Profile Endpoint</h2>
+                        <p class="card-desc">Tests <code>GET /api/auth/me</code> with <code>Authorization: Bearer &lt;JWT&gt;</code> header.</p>
+                    </div>
+
+                    <div class="info-callout">
+                        <p>This endpoint requires an authenticated request. It extracts your identity and authorities directly from the cryptographically signed JWT token.</p>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-primary" onclick="fetchCurrentUser()">
+                            Fetch My Profile (with JWT)
+                        </button>
+                        <button class="btn btn-outline" onclick="fetchCurrentUserWithoutToken()">
+                            Call Without Token (Test 401)
+                        </button>
+                    </div>
+
+                    <div id="profileResult" class="profile-card hidden">
+                        <div class="avatar-circle" id="profileInitials">JD</div>
+                        <div class="profile-info">
+                            <h3 id="profFullName">-</h3>
+                            <p class="prof-username">@<span id="profUsername">-</span></p>
+                            <p class="prof-email" id="profEmail">-</p>
+                            <span class="badge-role" id="profRole">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: USERS LIST -->
+                <div id="usersTab" class="tab-content">
+                    <div class="card-header">
+                        <h2>All Registered Users</h2>
+                        <p class="card-desc">Tests <code>GET /api/users</code> secured endpoint to inspect records stored in MySQL.</p>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-primary" onclick="fetchAllUsers()">
+                            Load Users from MySQL
+                        </button>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Full Name</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Click "Load Users from MySQL" to query database.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 5: DOCS & ARCHITECTURE -->
+                <div id="docsTab" class="tab-content">
+                    <div class="card-header">
+                        <h2>Architecture & API Specs</h2>
+                        <p class="card-desc">Overview of endpoints, validation rules, and MySQL schema.</p>
+                    </div>
+
+                    <div class="docs-section">
+                        <h3>REST Endpoints</h3>
+                        <div class="endpoint-badge-list">
+                            <div class="endpoint-item">
+                                <span class="method post">POST</span>
+                                <code>/api/auth/register</code>
+                                <span class="access public">Public</span>
+                            </div>
+                            <div class="endpoint-item">
+                                <span class="method post">POST</span>
+                                <code>/api/auth/login</code>
+                                <span class="access public">Public</span>
+                            </div>
+                            <div class="endpoint-item">
+                                <span class="method get">GET</span>
+                                <code>/api/auth/me</code>
+                                <span class="access protected">Bearer JWT</span>
+                            </div>
+                            <div class="endpoint-item">
+                                <span class="method get">GET</span>
+                                <code>/api/users</code>
+                                <span class="access protected">Bearer JWT</span>
+                            </div>
+                            <div class="endpoint-item">
+                                <span class="method get">GET</span>
+                                <code>/api/auth/health</code>
+                                <span class="access public">Public</span>
+                            </div>
+                        </div>
+
+                        <h3>MySQL Table: <code>users</code></h3>
+                        <pre class="code-block">CREATE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    full_name VARCHAR(100) NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL, -- BCrypt Hash
+    role VARCHAR(20) NOT NULL DEFAULT 'ROLE_USER',
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME
+);</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Live Console / Response Inspector -->
+            <div class="card console-card">
+                <div class="card-header console-header">
+                    <div>
+                        <h2>Live Request & Response Inspector</h2>
+                        <p class="card-desc">Real-time HTTP payload and JSON response monitor</p>
+                    </div>
+                    <div class="console-tools">
+                        <span id="responseStatus" class="status-pill status-ready">IDLE</span>
+                        <button class="btn-icon" title="Clear Console" onclick="clearConsole()">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="console-body">
+                    <!-- Request Summary -->
+                    <div class="console-box">
+                        <div class="console-box-header">
+                            <span>Request Details</span>
+                            <span id="requestMeta" class="meta-tag">None</span>
+                        </div>
+                        <pre id="requestLog" class="json-display">// Trigger any action on the left to inspect request</pre>
+                    </div>
+
+                    <!-- Response Payload -->
+                    <div class="console-box">
+                        <div class="console-box-header">
+                            <span>Response Payload</span>
+                            <button class="btn-copy" onclick="copyResponse()">Copy JSON</button>
+                        </div>
+                        <pre id="responseLog" class="json-display">// Response JSON will appear here with syntax highlighting</pre>
+                    </div>
+
+                    <!-- JWT Token Inspector -->
+                    <div class="console-box">
+                        <div class="console-box-header">
+                            <span>Current JWT Bearer Token</span>
+                            <button class="btn-copy" onclick="copyToken()">Copy Token</button>
+                        </div>
+                        <div class="jwt-preview" id="jwtTokenDisplay">No token stored. Log in to acquire JWT.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>User Authentication API • Spring Boot 3.4.3 • Java 21 • MySQL Connector/J • Spring Security 6</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

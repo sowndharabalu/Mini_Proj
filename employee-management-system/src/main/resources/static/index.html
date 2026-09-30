@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StaffPulse - Employee Management System</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-users-gear"></i>
+                </div>
+                <div>
+                    <h1 class="brand-title">StaffPulse</h1>
+                    <span class="brand-subtitle">Employee Management System</span>
+                </div>
+            </div>
+            
+            <div class="nav-actions">
+                <div class="api-status-badge" id="apiStatusBadge">
+                    <span class="status-indicator online"></span>
+                    <span id="apiStatusText">Connected (Spring Boot API)</span>
+                </div>
+                <button class="btn btn-primary" id="openAddModalBtn">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Add Employee</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="main-container">
+        <!-- Dashboard Summary KPI Cards -->
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Total Staff</span>
+                    <div class="metric-icon blue"><i class="fa-solid fa-users"></i></div>
+                </div>
+                <div class="metric-value" id="kpiTotal">0</div>
+                <div class="metric-subtext">Active workforce database</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Active Members</span>
+                    <div class="metric-icon green"><i class="fa-solid fa-circle-check"></i></div>
+                </div>
+                <div class="metric-value" id="kpiActive">0</div>
+                <div class="metric-subtext" id="kpiActivePercent">0% of total staff</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">On Leave / Inactive</span>
+                    <div class="metric-icon amber"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                </div>
+                <div class="metric-value" id="kpiLeave">0</div>
+                <div class="metric-subtext">Temporarily off-duty</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Total Payroll</span>
+                    <div class="metric-icon purple"><i class="fa-solid fa-money-bill-wave"></i></div>
+                </div>
+                <div class="metric-value" id="kpiPayroll">$0</div>
+                <div class="metric-subtext" id="kpiAvgSalary">Avg: $0/yr</div>
+            </div>
+        </section>
+
+        <!-- Department Tag Pills -->
+        <section class="dept-overview-section" id="deptBreakdownContainer">
+            <!-- Dynamic department counts rendered here -->
+        </section>
+
+        <!-- Table Toolbar & Filters -->
+        <section class="toolbar-section">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Search by name, email, department, position..." autocomplete="off">
+                <button class="clear-search-btn" id="clearSearchBtn" title="Clear search">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="filter-controls">
+                <div class="select-wrapper">
+                    <select id="departmentFilter">
+                        <option value="ALL">All Departments</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Human Resources">Human Resources</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Operations">Operations</option>
+                        <option value="Product">Product</option>
+                    </select>
+                </div>
+
+                <div class="select-wrapper">
+                    <select id="statusFilter">
+                        <option value="ALL">All Statuses</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="ON_LEAVE">On Leave</option>
+                        <option value="INACTIVE">Inactive</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-secondary" id="exportBtn" title="Export to CSV">
+                    <i class="fa-solid fa-file-csv"></i>
+                    <span>Export</span>
+                </button>
+
+                <button class="btn btn-icon" id="refreshBtn" title="Refresh Table">
+                    <i class="fa-solid fa-rotate"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Employee Records Table -->
+        <section class="table-container">
+            <div class="table-responsive">
+                <table class="employee-table">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Department</th>
+                            <th>Position</th>
+                            <th>Salary</th>
+                            <th>Hire Date</th>
+                            <th>Status</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeTableBody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="loading-state" id="tableLoading">
+                <div class="spinner"></div>
+                <p>Loading employee records...</p>
+            </div>
+
+            <!-- Empty / No Results Placeholder -->
+            <div class="empty-state hidden" id="emptyState">
+                <div class="empty-icon"><i class="fa-solid fa-user-slash"></i></div>
+                <h3>No Employees Found</h3>
+                <p>No records match your search criteria. Try modifying your search or filters.</p>
+                <button class="btn btn-secondary" id="resetFiltersBtn">Reset Filters</button>
+            </div>
+
+            <!-- Table Footer -->
+            <div class="table-footer">
+                <span id="recordCountText">Showing 0 employees</span>
+                <span class="backend-info">Spring Data JPA • MySQL / In-Memory Database</span>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal: Add / Edit Employee -->
+    <div class="modal-overlay hidden" id="employeeModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <div class="modal-icon-badge" id="modalBadgeIcon">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <h2 class="modal-title" id="modalTitle">Add New Employee</h2>
+                        <p class="modal-subtitle" id="modalSubtitle">Enter employee credentials and job assignment details.</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" id="closeEmployeeModalBtn" aria-label="Close modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="employeeForm" novalidate>
+                <input type="hidden" id="employeeId">
+                <div class="modal-body">
+                    <!-- Name Row -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name <span class="required">*</span></label>
+                            <input type="text" id="firstName" name="firstName" placeholder="e.g. Alice" required>
+                            <span class="field-error" id="firstNameError"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name <span class="required">*</span></label>
+                            <input type="text" id="lastName" name="lastName" placeholder="e.g. Johnson" required>
+                            <span class="field-error" id="lastNameError"></span>
+                        </div>
+                    </div>
+
+                    <!-- Contact Row -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Work Email <span class="required">*</span></label>
+                            <input type="email" id="email" name="email" placeholder="alice.johnson@techcorp.com" required>
+                            <span class="field-error" id="emailError"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="text" id="phone" name="phone" placeholder="+1-555-0100">
+                            <span class="field-error" id="phoneError"></span>
+                        </div>
+                    </div>
+
+                    <!-- Department & Position -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="department">Department <span class="required">*</span></label>
+                            <select id="department" name="department" required>
+                                <option value="" disabled selected>Select Department</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Human Resources">Human Resources</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Operations">Operations</option>
+                                <option value="Product">Product</option>
+                            </select>
+                            <span class="field-error" id="departmentError"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="position">Position / Job Title <span class="required">*</span></label>
+                            <input type="text" id="position" name="position" placeholder="e.g. Senior Software Engineer" required>
+                            <span class="field-error" id="positionError"></span>
+                        </div>
+                    </div>
+
+                    <!-- Salary, Hire Date, Status -->
+                    <div class="form-row form-row-3">
+                        <div class="form-group">
+                            <label for="salary">Annual Salary ($) <span class="required">*</span></label>
+                            <input type="number" id="salary" name="salary" step="100" min="1000" placeholder="95000" required>
+                            <span class="field-error" id="salaryError"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="hireDate">Hire Date <span class="required">*</span></label>
+                            <input type="date" id="hireDate" name="hireDate" required>
+                            <span class="field-error" id="hireDateError"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Employment Status</label>
+                            <select id="status" name="status">
+                                <option value="ACTIVE">Active</option>
+                                <option value="ON_LEAVE">On Leave</option>
+                                <option value="INACTIVE">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelFormBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveEmployeeBtn">
+                        <i class="fa-solid fa-check"></i>
+                        <span id="saveBtnText">Save Employee</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: View Employee Details -->
+    <div class="modal-overlay hidden" id="viewModal">
+        <div class="modal-dialog modal-dialog-sm">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <div class="modal-icon-badge info">
+                        <i class="fa-solid fa-id-card"></i>
+                    </div>
+                    <div>
+                        <h2 class="modal-title">Employee Details</h2>
+                        <p class="modal-subtitle">Full profile details and system record</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" id="closeViewModalBtn" aria-label="Close modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="viewModalBody">
+                <!-- Dynamically populated -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="closeViewBtn">Close</button>
+                <button type="button" class="btn btn-primary" id="editFromViewBtn">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Edit Profile</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Delete Confirmation -->
+    <div class="modal-overlay hidden" id="deleteModal">
+        <div class="modal-dialog modal-dialog-xs">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <div class="modal-icon-badge danger">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <h2 class="modal-title">Confirm Deletion</h2>
+                        <p class="modal-subtitle">This operation cannot be undone</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" id="closeDeleteModalBtn" aria-label="Close modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteEmployeeName">this employee</strong> from the database?</p>
+                <div class="delete-warning-box">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>Their database record and payroll references will be permanently removed.</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>Delete Employee</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Custom JS -->
+    <script src="app.js"></script>
+</body>
+</html>

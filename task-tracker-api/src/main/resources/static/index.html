@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Tracker | Spring Boot & MySQL REST API</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-secondary: #131b2e;
+            --bg-card: #1a233b;
+            --bg-hover: #222e4d;
+            --border: #2a375a;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.25);
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.2);
+            --warning: #f59e0b;
+            --warning-glow: rgba(245, 158, 11, 0.2);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.2);
+            --purple: #8b5cf6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 0.5rem;
+        }
+
+        .brand h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: #fff;
+            box-shadow: 0 4px 14px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--bg-hover);
+            border-color: #3b82f6;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .stat-card.total { border-left: 4px solid var(--primary); }
+        .stat-card.completed { border-left: 4px solid var(--success); }
+        .stat-card.in-progress { border-left: 4px solid var(--warning); }
+        .stat-card.pending { border-left: 4px solid var(--purple); }
+        .stat-card.overdue { border-left: 4px solid var(--danger); }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #1e293b;
+            border-radius: 999px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        /* Main Content Layout */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 960px) {
+            .content-grid {
+                grid-template-columns: 320px 1fr;
+            }
+        }
+
+        /* Filter & Form Panels */
+        .panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.35rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.55rem 0.75rem;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-glow);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Task Cards List */
+        .task-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .task-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .task-card:hover {
+            border-color: rgba(59, 130, 246, 0.4);
+            background-color: var(--bg-hover);
+        }
+
+        .task-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .task-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .task-badges {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.2rem 0.55rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .badge-status-PENDING { background-color: rgba(139, 92, 246, 0.2); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.4); }
+        .badge-status-IN_PROGRESS { background-color: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.4); }
+        .badge-status-COMPLETED { background-color: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .badge-status-CANCELLED { background-color: rgba(100, 116, 139, 0.2); color: #cbd5e1; border: 1px solid rgba(100, 116, 139, 0.4); }
+
+        .badge-priority-LOW { background-color: rgba(100, 116, 139, 0.15); color: #94a3b8; }
+        .badge-priority-MEDIUM { background-color: rgba(59, 130, 246, 0.15); color: #93c5fd; }
+        .badge-priority-HIGH { background-color: rgba(245, 158, 11, 0.15); color: #fde047; }
+        .badge-priority-URGENT { background-color: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .badge-overdue {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .task-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.85rem;
+            white-space: pre-wrap;
+        }
+
+        .task-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            padding-top: 0.75rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-action {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-action:hover {
+            color: #fff;
+            border-color: var(--primary);
+            background-color: var(--bg-secondary);
+        }
+
+        .btn-delete:hover {
+            color: #ef4444;
+            border-color: #ef4444;
+        }
+
+        /* Live JSON Inspection Drawer */
+        .api-inspector {
+            margin-top: 2rem;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .api-inspector-header {
+            background-color: var(--bg-secondary);
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .api-inspector-body {
+            padding: 1rem 1.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            background-color: #070a12;
+            color: #7dd3fc;
+            max-height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1.25rem;
+            color: #fff;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 520px;
+            padding: 1.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-badge">Spring Boot 3 + MySQL REST API</div>
+            <h1>Task Tracker API</h1>
+            <p>Controller–Service–Repository Architecture with JPA and MySQL Data Store</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="fetchTasks()">↻ Refresh</button>
+            <a href="/h2-console" target="_blank" class="btn btn-secondary" title="In Dev Profile">H2 Console</a>
+            <button class="btn btn-primary" onclick="openCreateModal()">+ New Task</button>
+        </div>
+    </header>
+
+    <!-- Metrics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card total">
+            <div class="stat-label">Total Tasks</div>
+            <div class="stat-value" id="stat-total">0</div>
+        </div>
+        <div class="stat-card completed">
+            <div class="stat-label">Completed</div>
+            <div class="stat-value" id="stat-completed">0</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="stat-rate-bar"></div>
+            </div>
+        </div>
+        <div class="stat-card in-progress">
+            <div class="stat-label">In Progress</div>
+            <div class="stat-value" id="stat-in-progress">0</div>
+        </div>
+        <div class="stat-card pending">
+            <div class="stat-label">Pending</div>
+            <div class="stat-value" id="stat-pending">0</div>
+        </div>
+        <div class="stat-card overdue">
+            <div class="stat-label">Overdue</div>
+            <div class="stat-value" id="stat-overdue">0</div>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="content-grid">
+        <!-- Sidebar Filters -->
+        <aside>
+            <div class="panel">
+                <div class="panel-title">
+                    <span>Filters & Search</span>
+                    <button class="btn-action" onclick="resetFilters()">Reset</button>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Search</label>
+                    <input type="text" id="filter-search" class="form-input" placeholder="Title or description..." oninput="debounceFetch()">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select id="filter-status" class="form-select" onchange="fetchTasks()">
+                        <option value="">All Statuses</option>
+                        <option value="PENDING">PENDING</option>
+                        <option value="IN_PROGRESS">IN_PROGRESS</option>
+                        <option value="COMPLETED">COMPLETED</option>
+                        <option value="CANCELLED">CANCELLED</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select id="filter-priority" class="form-select" onchange="fetchTasks()">
+                        <option value="">All Priorities</option>
+                        <option value="LOW">LOW</option>
+                        <option value="MEDIUM">MEDIUM</option>
+                        <option value="HIGH">HIGH</option>
+                        <option value="URGENT">URGENT</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Due Date</label>
+                    <input type="date" id="filter-duedate" class="form-input" onchange="fetchTasks()">
+                </div>
+            </div>
+
+            <!-- Architecture Info Panel -->
+            <div class="panel" style="font-size: 0.8rem; color: var(--text-secondary);">
+                <div class="panel-title" style="font-size: 0.85rem;">System Architecture</div>
+                <p style="margin-bottom: 0.5rem;"><strong style="color: #60a5fa;">Controller:</strong> <code>TaskController</code> validates & dispatches HTTP requests.</p>
+                <p style="margin-bottom: 0.5rem;"><strong style="color: #34d399;">Service:</strong> <code>TaskServiceImpl</code> implements tracking logic & transaction boundaries.</p>
+                <p><strong style="color: #f472b6;">Repository:</strong> <code>TaskRepository</code> manages MySQL Spring Data queries.</p>
+            </div>
+        </aside>
+
+        <!-- Tasks Listing -->
+        <main>
+            <div class="task-list-header">
+                <h2 style="font-size: 1.15rem; font-weight: 700;">Daily Tasks List</h2>
+                <span id="task-count-badge" style="font-size: 0.85rem; color: var(--text-muted);">Loading...</span>
+            </div>
+
+            <div id="tasks-container">
+                <!-- Dynamically rendered -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Live REST API JSON Inspector -->
+    <div class="api-inspector">
+        <div class="api-inspector-header">
+            <span style="font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                Live REST API JSON Inspector (<span id="api-last-method">GET</span> <span id="api-last-endpoint">/api/tasks</span>)
+            </span>
+            <span id="api-status-badge" class="badge" style="background:#1e293b; color:#94a3b8;">200 OK</span>
+        </div>
+        <pre class="api-inspector-body" id="api-inspector-json">// Waiting for first API call...</pre>
+    </div>
+</div>
+
+<!-- Create / Edit Modal -->
+<div class="modal-overlay" id="task-modal">
+    <div class="modal-card">
+        <h3 id="modal-title" style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1.25rem;">Create New Task</h3>
+        <form id="task-form" onsubmit="handleFormSubmit(event)">
+            <input type="hidden" id="task-id">
+
+            <div class="form-group">
+                <label class="form-label">Task Title *</label>
+                <input type="text" id="task-title" class="form-input" required minlength="2" maxlength="150" placeholder="e.g. Set up database replication">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea id="task-desc" class="form-textarea" maxlength="1000" placeholder="Details about this task..."></textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select id="task-priority" class="form-select">
+                        <option value="LOW">LOW</option>
+                        <option value="MEDIUM" selected>MEDIUM</option>
+                        <option value="HIGH">HIGH</option>
+                        <option value="URGENT">URGENT</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select id="task-status" class="form-select">
+                        <option value="PENDING" selected>PENDING</option>
+                        <option value="IN_PROGRESS">IN_PROGRESS</option>
+                        <option value="COMPLETED">COMPLETED</option>
+                        <option value="CANCELLED">CANCELLED</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Due Date</label>
+                <input type="date" id="task-duedate" class="form-input">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="modal-save-btn">Save Task</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast">
+    <span id="toast-message"></span>
+</div>
+
+<script>
+    const API_BASE = '/api/tasks';
+    let debounceTimer;
+
+    function debounceFetch() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(fetchTasks, 300);
+    }
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-message');
+        toastMsg.innerText = message;
+        toast.className = `toast show ${type}`;
+        setTimeout(() => {
+            toast.className = 'toast';
+        }, 3500);
+    }
+
+    function updateInspector(method, endpoint, statusCode, data) {
+        document.getElementById('api-last-method').innerText = method;
+        document.getElementById('api-last-endpoint').innerText = endpoint;
+        const statusBadge = document.getElementById('api-status-badge');
+        statusBadge.innerText = statusCode;
+        if (statusCode >= 200 && statusCode < 300) {
+            statusBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+            statusBadge.style.color = '#34d399';
+        } else {
+            statusBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+            statusBadge.style.color = '#f87171';
+        }
+        document.getElementById('api-inspector-json').textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function fetchStats() {
+        try {
+            const res = await fetch(`${API_BASE}/stats`);
+            const json = await res.json();
+            if (json.success) {
+                const s = json.data;
+                document.getElementById('stat-total').innerText = s.totalTasks;
+                document.getElementById('stat-completed').innerText = s.completedTasks;
+                document.getElementById('stat-in-progress').innerText = s.inProgressTasks;
+                document.getElementById('stat-pending').innerText = s.pendingTasks;
+                document.getElementById('stat-overdue').innerText = s.overdueTasks;
+                document.getElementById('stat-rate-bar').style.width = `${s.completionRate}%`;
+            }
+        } catch (err) {
+            console.error('Failed to load stats', err);
+        }
+    }
+
+    async function fetchTasks() {
+        const status = document.getElementById('filter-status').value;
+        const priority = document.getElementById('filter-priority').value;
+        const dueDate = document.getElementById('filter-duedate').value;
+        const search = document.getElementById('filter-search').value;
+
+        const params = new URLSearchParams();
+        if (status) params.append('status', status);
+        if (priority) params.append('priority', priority);
+        if (dueDate) params.append('dueDate', dueDate);
+        if (search) params.append('search', search);
+
+        const url = `${API_BASE}?${params.toString()}`;
+        try {
+            const res = await fetch(url);
+            const json = await res.json();
+            updateInspector('GET', url, `${res.status} ${res.statusText}`, json);
+
+            if (json.success) {
+                renderTasks(json.data);
+            }
+            fetchStats();
+        } catch (err) {
+            console.error('Failed to fetch tasks', err);
+            showToast('Failed to connect to backend API', 'error');
+        }
+    }
+
+    function renderTasks(tasks) {
+        const container = document.getElementById('tasks-container');
+        document.getElementById('task-count-badge').innerText = `${tasks.length} task${tasks.length === 1 ? '' : 's'} displayed`;
+
+        if (!tasks || tasks.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <h3>No tasks found</h3>
+                    <p style="margin-top: 0.5rem;">Create a new task or adjust your filters.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = tasks.map(t => {
+            const overdueBadge = t.overdue ? `<span class="badge badge-overdue">OVERDUE</span>` : '';
+            const nextStatusMap = {
+                'PENDING': 'IN_PROGRESS',
+                'IN_PROGRESS': 'COMPLETED',
+                'COMPLETED': 'PENDING',
+                'CANCELLED': 'PENDING'
+            };
+            const nextStatus = nextStatusMap[t.status] || 'PENDING';
+
+            return `
+                <div class="task-card">
+                    <div class="task-top">
+                        <div class="task-title">${escapeHtml(t.title)}</div>
+                        <div class="task-badges">
+                            ${overdueBadge}
+                            <span class="badge badge-priority-${t.priority}">${t.priority}</span>
+                            <span class="badge badge-status-${t.status}">${t.status.replace('_', ' ')}</span>
+                        </div>
+                    </div>
+                    ${t.description ? `<p class="task-desc">${escapeHtml(t.description)}</p>` : ''}
+                    <div class="task-footer">
+                        <div>
+                            <span>Due: <strong>${t.dueDate ? t.dueDate : 'Not set'}</strong></span>
+                            <span style="margin: 0 0.5rem;">•</span>
+                            <span>Created: ${t.createdAt ? t.createdAt.substring(0, 10) : ''}</span>
+                        </div>
+                        <div class="task-actions">
+                            <button class="btn-action" onclick="toggleStatus(${t.id}, '${nextStatus}')" title="Advance status">
+                                ➔ Mark ${nextStatus.replace('_', ' ')}
+                            </button>
+                            <button class="btn-action" onclick='openEditModal(${JSON.stringify(t)})'>Edit</button>
+                            <button class="btn-action btn-delete" onclick="deleteTask(${t.id})">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function openCreateModal() {
+        document.getElementById('modal-title').innerText = 'Create New Task';
+        document.getElementById('task-id').value = '';
+        document.getElementById('task-form').reset();
+        document.getElementById('task-modal').classList.add('active');
+    }
+
+    function openEditModal(task) {
+        document.getElementById('modal-title').innerText = 'Edit Task #' + task.id;
+        document.getElementById('task-id').value = task.id;
+        document.getElementById('task-title').value = task.title || '';
+        document.getElementById('task-desc').value = task.description || '';
+        document.getElementById('task-priority').value = task.priority || 'MEDIUM';
+        document.getElementById('task-status').value = task.status || 'PENDING';
+        document.getElementById('task-duedate').value = task.dueDate || '';
+        document.getElementById('task-modal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('task-modal').classList.remove('active');
+    }
+
+    async function handleFormSubmit(event) {
+        event.preventDefault();
+        const id = document.getElementById('task-id').value;
+        const payload = {
+            title: document.getElementById('task-title').value,
+            description: document.getElementById('task-desc').value,
+            priority: document.getElementById('task-priority').value,
+            status: document.getElementById('task-status').value,
+            dueDate: document.getElementById('task-duedate').value || null
+        };
+
+        const isEdit = Boolean(id);
+        const url = isEdit ? `${API_BASE}/${id}` : API_BASE;
+        const method = isEdit ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            updateInspector(method, url, `${res.status} ${res.statusText}`, json);
+
+            if (res.ok && json.success) {
+                showToast(isEdit ? 'Task updated successfully' : 'Task created successfully', 'success');
+                closeModal();
+                fetchTasks();
+            } else {
+                const errorMsg = json.details ? json.details.join(', ') : (json.message || 'Operation failed');
+                showToast(errorMsg, 'error');
+            }
+        } catch (err) {
+            console.error('Save error', err);
+            showToast('Request failed', 'error');
+        }
+    }
+
+    async function toggleStatus(id, newStatus) {
+        try {
+            const url = `${API_BASE}/${id}/status`;
+            const payload = { status: newStatus };
+            const res = await fetch(url, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            updateInspector('PATCH', url, `${res.status} ${res.statusText}`, json);
+
+            if (res.ok && json.success) {
+                showToast(`Task status updated to ${newStatus}`, 'success');
+                fetchTasks();
+            } else {
+                showToast(json.message || 'Status update failed', 'error');
+            }
+        } catch (err) {
+            console.error('Status error', err);
+            showToast('Status update request failed', 'error');
+        }
+    }
+
+    async function deleteTask(id) {
+        if (!confirm('Are you sure you want to delete task #' + id + '?')) return;
+
+        try {
+            const url = `${API_BASE}/${id}`;
+            const res = await fetch(url, { method: 'DELETE' });
+            const json = await res.json();
+            updateInspector('DELETE', url, `${res.status} ${res.statusText}`, json);
+
+            if (res.ok && json.success) {
+                showToast('Task deleted successfully', 'success');
+                fetchTasks();
+            } else {
+                showToast(json.message || 'Delete failed', 'error');
+            }
+        } catch (err) {
+            console.error('Delete error', err);
+            showToast('Delete request failed', 'error');
+        }
+    }
+
+    function resetFilters() {
+        document.getElementById('filter-search').value = '';
+        document.getElementById('filter-status').value = '';
+        document.getElementById('filter-priority').value = '';
+        document.getElementById('filter-duedate').value = '';
+        fetchTasks();
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // Initial Load
+    fetchTasks();
+</script>
+
+</body>
+</html>
