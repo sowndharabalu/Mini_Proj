@@ -4,7 +4,7 @@ A full-stack, production-ready web application built with **Java**, **Spring Boo
 
 ---
 
-## 🌟 Key Highlights & Requirements Delivered
+##  Key Highlights & Requirements Delivered
 
 - **Full CRUD Capabilities:** Add new employees, view full profiles, edit existing records, and delete employees with confirmation dialogs.
 - **Spring Boot REST APIs:** Clean layered architecture (`Controller` → `Service` → `Repository` → `Entity`) with Bean Validation and centralized `@RestControllerAdvice` error handling.
@@ -14,7 +14,7 @@ A full-stack, production-ready web application built with **Java**, **Spring Boo
 
 ---
 
-## 🏗️ Architecture & Tech Stack
+##  Architecture & Tech Stack
 
 | Layer | Technology | Details |
 | :--- | :--- | :--- |
@@ -25,7 +25,7 @@ A full-stack, production-ready web application built with **Java**, **Spring Boo
 
 ---
 
-## 📂 Project Directory Structure
+##  Project Directory Structure
 
 ```
 employee-management-system/
@@ -75,7 +75,7 @@ employee-management-system/
 
 ---
 
-## 🗄️ MySQL Database Setup
+##  MySQL Database Setup
 
 ### Option 1: Automatic Table Creation via Hibernate (Default)
 1. Ensure your local MySQL service is running:
@@ -99,7 +99,7 @@ mysql -u root -p < db_setup.sql
 
 ---
 
-## 🚀 How to Run the Application
+##  How to Run the Application
 
 Navigate to the project root directory:
 ```powershell
@@ -126,7 +126,7 @@ Visit: **[http://localhost:8080/](http://localhost:8080/)**
 
 ---
 
-## 📡 REST API Documentation
+##  REST API Documentation
 
 Base URL: `http://localhost:8080/api/employees`
 
@@ -156,7 +156,7 @@ Base URL: `http://localhost:8080/api/employees`
 
 ---
 
-## 🧪 Running Automated Tests
+##  Running Automated Tests
 
 Run the full integration test suite:
 ```powershell
